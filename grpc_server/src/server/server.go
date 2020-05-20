@@ -1,10 +1,12 @@
 package server
 
 import (
-	"github.com/maei/golang_grpc_bidirect_streaming/grpc_server/src/domain/greetpb"
+	"fmt"
+	"github.com/maei/golang_grpc_bidirect_streaming_worker/grpc_server/src/domain/greetpb"
 	"github.com/maei/shared_utils_go/logger"
 	"google.golang.org/grpc"
 	"io"
+	"log"
 	"net"
 	"time"
 )
@@ -38,7 +40,6 @@ func (*server) GetGreeting(stream greetpb.GreetService_GetGreetingServer) error 
 				logger.Error("Error while fetich GRPC-Client request", reqErr)
 				break
 			}
-			time.Sleep(5 * time.Second)
 			jobs <- req.GetGreet().GetFirstName()
 		}
 		close(jobs)
@@ -47,28 +48,29 @@ func (*server) GetGreeting(stream greetpb.GreetService_GetGreetingServer) error 
 
 	// go routine to catch work from job channel and send it back to grpc-client
 	go func() {
-		/*		for {
-				j, more := <-jobs
-				if more {
-					log.Printf("worker gets string %s", j)
-					res := &greetpb.GreetResponse{
-						Result: fmt.Sprintf("Hello %v from the GRPC-Server", j),
-					}
-					streamErr := stream.Send(res)
-					if streamErr != nil {
-						logger.Error("Error while streaming data to GRPC-Client", streamErr)
-						break
-					}
-				} else {
-					log.Println("received all jobs")
-					done <- true
-					return
+		for {
+			j, more := <-jobs
+			if more {
+				log.Printf("worker gets string %s", j)
+				res := &greetpb.GreetResponse{
+					Result: fmt.Sprintf("Hello %v from the GRPC-Server", j),
 				}
-			}*/
+				streamErr := stream.Send(res)
+				if streamErr != nil {
+					logger.Error("Error while streaming data to GRPC-Client", streamErr)
+					break
+				}
+				time.Sleep(5 * time.Second)
+			} else {
+				log.Println("received all jobs")
+				done <- true
+				return
+			}
+		}
 	}()
 
-	logger.Info("gRPC-Server: All jobs done")
 	<-done
+	logger.Info("gRPC-Server: All jobs done")
 	return nil
 
 }

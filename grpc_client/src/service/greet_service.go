@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/maei/golang_grpc_bidirect_streaming/grpc_client/src/client"
-	"github.com/maei/golang_grpc_bidirect_streaming/grpc_client/src/domain/greetpb"
+	"github.com/maei/golang_grpc_bidirect_streaming_worker/grpc_client/src/client"
+	"github.com/maei/golang_grpc_bidirect_streaming_worker/grpc_client/src/domain/greetpb"
 	"github.com/maei/shared_utils_go/logger"
 	"io"
 	"time"
@@ -41,11 +41,10 @@ func (*greetService) Greeting() {
 	}
 
 	// create some random names
-	names := []string{"Matthias", "Sonia", "Heidi", "Jochen"}
+	names := []string{"Matthias", "Sonia", "Heidi", "Jochen", "Stephanie"}
 
 	// create a channel of type struct
-	//waitc := make(chan struct{})
-	waitc := make(chan bool)
+	waitc := make(chan struct{})
 
 	// send messages to gRPC-Server in a go-routine
 	go func() {
@@ -71,8 +70,7 @@ func (*greetService) Greeting() {
 			}
 			fmt.Println(fmt.Sprintf("Result from gRPC-Server: %v", res.GetResult()))
 		}
-		waitc <- true
-		//close(waitc)
+		close(waitc)
 
 	}()
 	//block until everything is done
